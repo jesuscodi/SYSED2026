@@ -1,7 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escuela Dominical Rey de Reyes</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script defer src="main.js"></script>
+</head>
+<body>
+
 <div id="loginDiv">
   <h2>Login</h2>
   <input id="email" placeholder="Correo">
-  <input id="password" type="password" placeholder="Clave" type="password">
+  <input id="password" type="password" placeholder="Clave">
   <button onclick="login()">Entrar</button>
   <p id="loginError"></p>
 </div>
@@ -13,6 +27,7 @@
 
   <button onclick="mostrarAgregarAlumno()">Agregar / Editar Alumno</button>
   <button onclick="mostrarAsistencia()">Registrar Asistencia</button>
+  <button onclick="mostrarHistorial()">Ver Historial</button>
 
   <!-- AGREGAR / EDITAR ALUMNO -->
   <div id="agregarAlumnoDiv" style="display:none">
@@ -35,7 +50,16 @@
     <button onclick="registrarAsistenciaUI()">Registrar</button>
   </div>
 
+  <!-- HISTORIAL -->
+  <div id="historialDiv" style="display:none">
+    <h3>Historial de Asistencia</h3>
+    <div id="historialLista"></div>
+  </div>
+
   <!-- LISTA DE ALUMNOS -->
   <h3>Lista de Alumnos</h3>
   <div id="listaAlumnos"></div>
 </div>
+
+</body>
+</html>
