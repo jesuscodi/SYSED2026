@@ -1,17 +1,3 @@
-// 🔹 Configuración Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDNd6f8zriP3U-1-zLTD0e_c45H73lEg1o",
-  authDomain: "escueladominicalreydereyes.firebaseapp.com",
-  projectId: "escueladominicalreydereyes",
-  storageBucket: "escueladominicalreydereyes.firebasestorage.app",
-  messagingSenderId: "891424130656",
-  appId: "1:891424130656:web:8b0e92dd4cf00ab40ce505"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
 let usuarioActual = null;
 let alumnos = [];
 
@@ -21,7 +7,7 @@ async function login() {
   const password = document.getElementById("password").value;
 
   try {
-    const cred = await auth.signInWithEmailAndPassword(email, password);
+    await auth.signInWithEmailAndPassword(email, password);
     const snapshot = await db.collection("usuarios").where("email","==",email).get();
     usuarioActual = snapshot.docs[0].data();
 
@@ -101,11 +87,9 @@ async function guardarAlumno() {
   const aula = usuarioActual.rol==="admin"?1:usuarioActual.aula_id;
 
   if(select.value === "") {
-    // Nuevo alumno
     await db.collection("alumnos").add({nombre, edad, aula_id: aula});
     alert("Alumno agregado");
   } else {
-    // Editar existente
     await db.collection("alumnos").doc(select.value).update({nombre, edad});
     alert("Alumno actualizado");
   }
@@ -137,4 +121,26 @@ async function registrarAsistenciaUI() {
   });
 
   alert("Asistencia registrada");
+}
+
+// MOSTRAR HISTORIAL
+async function mostrarHistorial() {
+  document.getElementById("historialDiv").style.display = "block";
+  const div = document.getElementById("historialLista");
+  div.innerHTML = "";
+
+  const snapshot = await db.collection("asistencias").get();
+  let asistencias = snapshot.docs.map(d => d.data());
+
+  if(usuarioActual.rol !== "admin") {
+    const idsAula = alumnos.map(a => a.id);
+    asistencias = asistencias.filter(a => idsAula.includes(a.alumno_id));
+  }
+
+  asistencias.forEach(a => {
+    const alum = alumnos.find(x => x.id === a.alumno_id);
+    const p = document.createElement("p");
+    p.innerText = `${alum.nombre} - ${a.fecha} - ${a.asistio ? "Asistió" : "No asistió"}`;
+    div.appendChild(p);
+  });
 }
