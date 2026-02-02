@@ -1,6 +1,6 @@
-body { font-family: Arial, sans-serif; background:#f0f8ff; padding:20px; }
-h2, h3 { color:#2a4d69; }
-input, select, button { padding:5px; margin:5px; }
-button { cursor:pointer; background:#4CAF50; color:white; border:none; border-radius:4px; }
-#appDiv { margin-top:20px; }
-#listaAlumnos p, #historialLista p { background:#e0f7fa; padding:5px; border-radius:4px; margin:3px 0; }
+body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+h2, h3 { color: #2a7ae2; }
+input, select, button { margin: 5px; padding: 5px; }
+button { background: #2a7ae2; color: white; border: none; cursor: pointer; }
+button:hover { background: #1e5bb8; }
+#loginDiv, #appDiv { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);}
