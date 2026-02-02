@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Escuela Dominical Rey de Reyes</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div id="loginDiv">
+    <h2>Login</h2>
+    <input id="email" placeholder="Correo">
+    <input id="password" type="password" placeholder="Clave">
+    <button onclick="login()">Entrar</button>
+    <p id="loginError"></p>
+  </div>
+
+  <div id="appDiv" style="display:none">
+    <h2 id="welcome"></h2>
+    <button onclick="logout()">Salir</button>
+    <hr>
+    <button onclick="mostrarAgregarAlumno()">Agregar Alumno</button>
+    <button onclick="mostrarAsistencia()">Registrar Asistencia</button>
+
+    <div id="agregarAlumnoDiv" style="display:none">
+      <h3>Agregar Alumno</h3>
+      <input id="nombreAlumno" placeholder="Nombre">
+      <input id="edadAlumno" placeholder="Edad">
+      <select id="aulaAlumno">
+        <option value="1">Escogidos con Propósitos: 8-12 años</option>
+        <option value="2">Los Amigos de Dios: 3-7 años</option>
+      </select>
+      <button onclick="agregarAlumnoUI()">Agregar</button>
+    </div>
+
+    <div id="asistenciaDiv" style="display:none">
+      <h3>Registrar Asistencia</h3>
+      <select id="alumnoSelect"></select>
+      <label>
+        <input type="checkbox" id="asistioCheck">
+        Asistió
+      </label>
+      <button onclick="registrarAsistenciaUI()">Registrar</button>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
