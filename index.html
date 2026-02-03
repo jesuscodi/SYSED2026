@@ -1,55 +1,80 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Escuela Dominical Rey de Reyes</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="firebase-config.js"></script>
-<script src="app.js"></script>
+  <meta charset="UTF-8">
+  <title>Escuela Dominical Rey de Reyes</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
 </head>
 <body>
-
-<div id="loginDiv">
-  <h2>Login Maestro/Admin</h2>
-  <input id="email" type="email" placeholder="Correo">
-  <input id="password" type="password" placeholder="Contraseña">
-  <button onclick="login()">Ingresar</button>
-  <p id="loginError" style="color:red;"></p>
-</div>
-
-<div id="appDiv" style="display:none;">
-  <h2 id="welcome"></h2>
-  <button onclick="logout()">Salir</button>
-
-  <hr>
-  <h3>Agregar / Editar Alumno</h3>
-  <select id="editarAlumnoSelect"></select><br><br>
-  <input id="nombreAlumno" placeholder="Nombre">
-  <input id="edadAlumno" type="number" placeholder="Edad">
-  <button onclick="guardarAlumno()">Guardar Alumno</button>
-
-  <hr>
-  <h3>Registrar Asistencia</h3>
-  <select id="alumnoSelect"></select>
-  <label>
-    <input id="asistioCheck" type="checkbox"> Asistió
-  </label>
-  <button onclick="registrarAsistenciaUI()">Registrar</button>
-
-  <hr>
-  <h3>Lista de Alumnos</h3>
-  <div id="listaAlumnos"></div>
-
-  <hr>
-  <h3>Historial de Asistencia</h3>
-  <button onclick="mostrarHistorial()">Ver Historial</button>
-  <div id="historialDiv" style="display:none;">
-    <div id="historialLista"></div>
+  <!-- LOGIN -->
+  <div id="loginDiv">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Correo">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Ingresar</button>
+    <p id="loginError" style="color:red"></p>
   </div>
-</div>
 
+  <!-- APP -->
+  <div id="appDiv" style="display:none;">
+    <h2 id="welcome"></h2>
+    <button onclick="logout()">Cerrar sesión</button>
+
+    <!-- MENÚ -->
+    <nav>
+      <button onclick="mostrarSeccion('alumnosDiv')">Alumnos</button>
+      <button onclick="mostrarSeccion('asistenciasDiv')">Asistencias</button>
+      <button onclick="mostrarSeccion('maestrosDiv')" id="adminBtn" style="display:none;">Maestros</button>
+    </nav>
+
+    <!-- ALUMNOS -->
+    <div id="alumnosDiv" style="display:none;">
+      <h3>Registrar / Editar Alumno</h3>
+      <select id="editarAlumnoSelect">
+        <option value="">Nuevo Alumno</option>
+      </select>
+      <input type="text" id="nombreAlumno" placeholder="Nombre">
+      <input type="number" id="edadAlumno" placeholder="Edad">
+      <select id="aulaAlumno" style="display:none;">
+        <option value="1">Escogidos con Propósito (8-12)</option>
+        <option value="2">Amigos de Dios (3-7)</option>
+      </select>
+      <button onclick="guardarAlumno()">Guardar Alumno</button>
+
+      <h3>Lista de Alumnos</h3>
+      <div id="listaAlumnos"></div>
+    </div>
+
+    <!-- ASISTENCIAS -->
+    <div id="asistenciasDiv" style="display:none;">
+      <h3>Registrar Asistencia</h3>
+      <select id="alumnoSelect"></select>
+      <label>
+        <input type="checkbox" id="asistioCheck"> Asistió
+      </label>
+      <button onclick="registrarAsistenciaUI()">Registrar</button>
+
+      <h3>Historial de Asistencias</h3>
+      <div id="historialLista"></div>
+    </div>
+
+    <!-- MAESTROS (solo admin) -->
+    <div id="maestrosDiv" style="display:none;">
+      <h3>Registrar Maestro</h3>
+      <input type="text" id="nombreMaestro" placeholder="Nombre">
+      <input type="email" id="emailMaestro" placeholder="Correo">
+      <input type="password" id="passMaestro" placeholder="Contraseña">
+      <select id="aulaMaestro">
+        <option value="1">Escogidos con Propósito (8-12)</option>
+        <option value="2">Amigos de Dios (3-7)</option>
+      </select>
+      <button onclick="registrarMaestro()">Guardar Maestro</button>
+    </div>
+  </div>
 </body>
 </html>
