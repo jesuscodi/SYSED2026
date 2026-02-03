@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login Escuela Dominical</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="firebase-config.js"></script>
-<script src="app.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Escuela Dominical</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="loginDiv" class="login-container">
-    <h2>Iniciar Sesión</h2>
-    <input type="email" id="email" placeholder="Correo">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button onclick="login()">Ingresar</button>
-    <p id="loginError" class="error"></p>
-</div>
+    <div class="login-container">
+        <h2>Escuela Dominical - Login</h2>
+        <input type="email" id="email" placeholder="Correo electrónico">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="login()">Ingresar</button>
+        <p id="loginError" class="error"></p>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
