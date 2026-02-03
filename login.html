@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Login Escuela Dominical</title>
+  <title>Escuela Dominical - Dashboard</title>
   <link rel="stylesheet" href="style.css">
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
@@ -11,14 +11,53 @@
   <script src="firebase-config.js"></script>
 </head>
 <body>
-  <div class="login-container">
-    <h2>Escuela Dominical Rey de Reyes</h2>
-    <input type="email" id="email" placeholder="Correo electrónico">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button onclick="login()">Ingresar</button>
-    <p id="loginError" class="error"></p>
+  <div class="sidebar">
+    <h2>Rey de Reyes</h2>
+    <button onclick="mostrarDashboard()">Dashboard</button>
+    <button onclick="mostrarAlumnos()">Alumnos</button>
+    <button onclick="mostrarAsistencia()">Asistencias</button>
+    <div id="adminMenu">
+      <button onclick="mostrarMaestros()">Maestros</button>
+    </div>
+    <button onclick="logout()">Cerrar Sesión</button>
   </div>
 
-  <script src="login.js"></script>
+  <div class="main-content">
+    <div id="dashboardDiv">
+      <h2>Dashboard</h2>
+      <p id="bienvenida"></p>
+      <div id="dashboardCards" class="cards-container">
+        <!-- Aquí se generarán los cards de estadísticas -->
+      </div>
+    </div>
+
+    <div id="alumnosDiv" style="display:none;">
+      <h2>Alumnos</h2>
+      <select id="editarAlumnoSelect"></select>
+      <input type="text" id="nombreAlumno" placeholder="Nombre">
+      <input type="number" id="edadAlumno" placeholder="Edad">
+      <select id="aulaAlumno">
+        <option value="1">Escogidos con Propósitos (8-12)</option>
+        <option value="2">Los Amigos de Dios (3-7)</option>
+      </select>
+      <button onclick="guardarAlumno()">Guardar Alumno</button>
+      <div id="listaAlumnos" class="alumnos-lista"></div>
+    </div>
+
+    <div id="asistenciasDiv" style="display:none;">
+      <h2>Registrar Asistencias</h2>
+      <input type="date" id="fechaAsistencia">
+      <div id="asistenciasLista"></div>
+      <button onclick="guardarAsistencias()">Guardar Asistencias</button>
+    </div>
+
+    <div id="maestrosDiv" style="display:none;">
+      <h2>Maestros</h2>
+      <div id="maestrosLista"></div>
+      <button onclick="agregarMaestroUI()">Agregar Maestro</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
