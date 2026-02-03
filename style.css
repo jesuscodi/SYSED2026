@@ -1,54 +1,68 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    background: #f5f5f5;
-}
-.login-container {
-    max-width: 400px;
-    margin: 100px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0px 0px 10px #ccc;
-    text-align: center;
-}
-.login-container input {
-    display: block;
-    width: 90%;
-    margin: 10px auto;
-    padding: 10px;
-}
-.login-container button {
-    padding: 10px 20px;
-    cursor: pointer;
-}
-.error { color: red; }
-
-.app-container {
+    padding: 0;
     display: flex;
 }
-.sidebar {
-    width: 220px;
-    background: #2e7d32;
+
+.menu {
+    width: 250px;
+    background: #4CAF50;
     color: white;
-    height: 100vh;
     padding: 20px;
-    box-sizing: border-box;
+    height: 100vh;
 }
-.sidebar button {
-    display: block;
-    margin: 10px 0;
-    width: 100%;
-    padding: 10px;
+
+.menu h2 {
+    margin-top: 0;
+}
+
+.menu ul {
+    list-style: none;
+    padding: 0;
+}
+
+.menu ul li {
     cursor: pointer;
-    background: #43a047;
-    color: white;
-    border: none;
-    border-radius: 4px;
+    margin: 15px 0;
 }
-.main-content {
+
+.contenido {
     flex: 1;
     padding: 20px;
+}
+
+.seccion {
+    display: none;
+}
+
+.seccion h3 {
+    margin-top: 0;
+}
+
+input, select, button {
+    margin: 5px 0;
+    padding: 8px;
+    width: 100%;
     box-sizing: border-box;
 }
-.section { margin-bottom: 20px; }
+
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+.error {
+    color: red;
+}
+
+#listaAlumnos p, #listaMaestros p, #listaAulas p, #listaAsistencia p {
+    border-bottom: 1px solid #ccc;
+    padding: 5px 0;
+}
