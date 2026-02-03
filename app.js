@@ -1,189 +1,164 @@
 let usuarioActual = null;
 let alumnos = [];
-let maestros = [];
+let asistenciasHoy = [];
 
-// ===== LOGIN =====
+/* ===================== LOGIN ===================== */
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
   try {
-    await auth.signInWithEmailAndPassword(email, password);
-    const snapshot = await db.collection("usuarios").where("email", "==", email).get();
-    usuarioActual = snapshot.docs[0].data();
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+
+    const snap = await db
+      .collection("usuarios")
+      .where("email", "==", email)
+      .get();
+
+    if (snap.empty) {
+      alert("No tienes perfil en Firestore");
+      return;
+    }
+
+    usuarioActual = { id: snap.docs[0].id, ...snap.docs[0].data() };
 
     document.getElementById("loginDiv").style.display = "none";
-    document.getElementById("appDiv").style.display = "block";
-    cargarDashboard();
+    document.getElementById("appDiv").style.display = "flex";
+
+    document.getElementById("welcome").innerText =
+      `Bienvenido, ${usuarioActual.nombre}`;
+
+    document.getElementById("miAula").innerText =
+      usuarioActual.rol === "admin" ? "Todas" : usuarioActual.aula_id;
+
     cargarAlumnos();
-    cargarMaestros();
+    mostrarSeccion("dashboard");
   } catch (e) {
-    document.getElementById("loginError").innerText = "Correo o contraseña incorrecta";
-    console.error(e);
+    document.getElementById("loginError").innerText =
+      "Correo o contraseña incorrecta";
   }
 }
 
+/* ===================== LOGOUT ===================== */
 function logout() {
   auth.signOut();
-  usuarioActual = null;
-  document.getElementById("appDiv").style.display = "none";
-  document.getElementById("loginDiv").style.display = "block";
+  location.reload();
 }
 
-// ===== CARGAR ALUMNOS =====
+/* ===================== SECCIONES ===================== */
+function mostrarSeccion(id) {
+  document.querySelectorAll(".section").forEach(s => s.style.display = "none");
+  document.getElementById(id).style.display = "block";
+}
+
+/* ===================== ALUMNOS ===================== */
 async function cargarAlumnos() {
-  const snapshot = await db.collection("alumnos").get();
-  let todosAlumnos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await db.collection("alumnos").get();
+  let todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  alumnos = usuarioActual.rol === "admin" 
-            ? todosAlumnos 
-            : todosAlumnos.filter(a => a.aula_id == usuarioActual.aula_id);
+  alumnos = usuarioActual.rol === "admin"
+    ? todos
+    : todos.filter(a => a.aula_id == usuarioActual.aula_id);
 
-  mostrarListaAlumnos();
-  llenarSelectAlumnos();
-  llenarSelectEditar();
+  renderTablaAlumnos();
+  renderTablaAsistencia();
+  actualizarDashboard();
 }
 
-// ===== CARGAR MAESTROS =====
-async function cargarMaestros() {
-  if(usuarioActual.rol !== "admin") return;
-  const snapshot = await db.collection("usuarios").where("rol","==","maestro").get();
-  maestros = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  mostrarListaMaestros();
-}
+function renderTablaAlumnos() {
+  const tbody = document.getElementById("tablaAlumnos");
+  tbody.innerHTML = "";
 
-// ===== LLENAR SELECT PARA ASISTENCIA =====
-function llenarSelectAlumnos() {
-  const select = document.getElementById("alumnoSelect");
-  if(!select) return;
-  select.innerHTML = "";
   alumnos.forEach(a => {
-    const opt = document.createElement("option");
-    opt.value = a.id;
-    opt.text = a.nombre;
-    select.add(opt);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${a.nombre}</td>
+      <td>${a.edad}</td>
+      <td>${a.aula_id}</td>
+    `;
+    tbody.appendChild(tr);
   });
 }
 
-// ===== LLENAR SELECT PARA EDITAR =====
-function llenarSelectEditar() {
-  const select = document.getElementById("editarAlumnoSelect");
-  if(!select) return;
-  select.innerHTML = "<option value=''>Nuevo Alumno</option>";
-  alumnos.forEach(a => {
-    const opt = document.createElement("option");
-    opt.value = a.id;
-    opt.text = a.nombre;
-    select.add(opt);
-  });
-
-  select.onchange = () => {
-    const id = select.value;
-    if(id === "") {
-      document.getElementById("nombreAlumno").value = "";
-      document.getElementById("edadAlumno").value = "";
-      document.getElementById("aulaAlumno").value = usuarioActual.aula_id || "1";
-    } else {
-      const alum = alumnos.find(x => x.id === id);
-      document.getElementById("nombreAlumno").value = alum.nombre;
-      document.getElementById("edadAlumno").value = alum.edad;
-      document.getElementById("aulaAlumno").value = alum.aula_id;
-    }
-  }
-}
-
-// ===== GUARDAR ALUMNO =====
+/* ===================== GUARDAR ALUMNO ===================== */
 async function guardarAlumno() {
   const nombre = document.getElementById("nombreAlumno").value;
   const edad = parseInt(document.getElementById("edadAlumno").value);
-  const aula = usuarioActual.rol==="admin" ? parseInt(document.getElementById("aulaAlumno").value) : usuarioActual.aula_id;
-  const select = document.getElementById("editarAlumnoSelect");
+  const aula = usuarioActual.rol === "admin"
+    ? parseInt(document.getElementById("aulaAlumno").value)
+    : usuarioActual.aula_id;
 
-  if(select.value === "") {
-    await db.collection("alumnos").add({ nombre, edad, aula_id: aula });
-    alert("Alumno agregado");
-  } else {
-    await db.collection("alumnos").doc(select.value).update({ nombre, edad, aula_id: aula });
-    alert("Alumno actualizado");
+  if (!nombre || !edad) {
+    alert("Complete los campos");
+    return;
   }
+
+  await db.collection("alumnos").add({
+    nombre,
+    edad,
+    aula_id: aula,
+    creado_por: usuarioActual.nombre
+  });
+
+  document.getElementById("nombreAlumno").value = "";
+  document.getElementById("edadAlumno").value = "";
 
   cargarAlumnos();
 }
 
-// ===== MOSTRAR LISTA DE ALUMNOS =====
-function mostrarListaAlumnos() {
-  const div = document.getElementById("listaAlumnos");
-  if(!div) return;
-  div.innerHTML = "";
+/* ===================== ASISTENCIA ===================== */
+function renderTablaAsistencia() {
+  const tbody = document.getElementById("tablaAsistencia");
+  tbody.innerHTML = "";
+  asistenciasHoy = [];
+
   alumnos.forEach(a => {
-    const p = document.createElement("p");
-    p.innerText = `Nombre: ${a.nombre}, Edad: ${a.edad}, Aula: ${a.aula_id}`;
-    div.appendChild(p);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${a.nombre}</td>
+      <td>
+        <input type="checkbox" onchange="marcarAsistencia('${a.id}', this.checked)">
+      </td>
+    `;
+    tbody.appendChild(tr);
   });
 }
 
-// ===== REGISTRAR ASISTENCIA =====
-async function registrarAsistenciaUI() {
-  const id = document.getElementById("alumnoSelect").value;
-  const asistio = document.getElementById("asistioCheck").checked;
-  const fecha = new Date().toISOString().slice(0,10);
-
-  await db.collection("asistencias").add({
-    alumno_id: id,
-    fecha,
-    asistio,
-    registrado_por: usuarioActual.nombre
-  });
-
-  alert("Asistencia registrada");
+function marcarAsistencia(idAlumno, asistio) {
+  const index = asistenciasHoy.findIndex(a => a.alumno_id === idAlumno);
+  if (index >= 0) {
+    asistenciasHoy[index].asistio = asistio;
+  } else {
+    asistenciasHoy.push({ alumno_id: idAlumno, asistio });
+  }
 }
 
-// ===== MOSTRAR HISTORIAL DE ASISTENCIAS =====
-async function mostrarHistorial() {
-  const div = document.getElementById("historialLista");
-  if(!div) return;
-  div.innerHTML = "";
+async function guardarAsistencias() {
+  const fecha = new Date().toISOString().slice(0, 10);
 
-  const snapshot = await db.collection("asistencias").get();
-  let asistencias = snapshot.docs.map(d => d.data());
-
-  if(usuarioActual.rol !== "admin") {
-    const idsAula = alumnos.map(a => a.id);
-    asistencias = asistencias.filter(a => idsAula.includes(a.alumno_id));
+  for (let a of asistenciasHoy) {
+    await db.collection("asistencias").add({
+      alumno_id: a.alumno_id,
+      asistio: a.asistio,
+      fecha,
+      aula_id: usuarioActual.aula_id,
+      registrado_por: usuarioActual.nombre
+    });
   }
 
-  asistencias.forEach(a => {
-    const alum = alumnos.find(x => x.id === a.alumno_id);
-    const p = document.createElement("p");
-    p.innerText = `${alum.nombre} - ${a.fecha} - ${a.asistio ? "Asistió" : "No asistió"} - Registrado por: ${a.registrado_por}`;
-    div.appendChild(p);
-  });
+  alert("Asistencia guardada");
 }
 
-// ===== DASHBOARD =====
-function cargarDashboard() {
-  const div = document.getElementById("dashboardDiv");
-  if(!div) return;
+/* ===================== DASHBOARD ===================== */
+async function actualizarDashboard() {
+  document.getElementById("totalAlumnos").innerText = alumnos.length;
 
-  const totalAlumnos = alumnos.length;
-  const totalAsistencias = alumnos.reduce((acc,a)=>{
-    return acc + 0; // Podemos agregar cálculo de asistencias por alumno
-  },0);
+  const snap = await db.collection("asistencias").get();
+  let asistencias = snap.docs.map(d => d.data());
 
-  div.innerHTML = `
-    <div class="card">Total Alumnos: ${totalAlumnos}</div>
-    <div class="card">Total Asistencias: ${totalAsistencias}</div>
-  `;
-}
+  if (usuarioActual.rol !== "admin") {
+    asistencias = asistencias.filter(a => a.aula_id == usuarioActual.aula_id);
+  }
 
-// ===== ADMIN: MOSTRAR MAESTROS =====
-function mostrarListaMaestros() {
-  const div = document.getElementById("listaMaestros");
-  if(!div) return;
-  div.innerHTML = "";
-  maestros.forEach(m => {
-    const p = document.createElement("p");
-    p.innerText = `Nombre: ${m.nombre}, Email: ${m.email}, Aula: ${m.aula_id}`;
-    div.appendChild(p);
-  });
+  document.getElementById("totalAsistencias").innerText = asistencias.length;
 }
