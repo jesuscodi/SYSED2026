@@ -1,114 +1,148 @@
-let usuarioActual = null;
-let alumnos = [];
-let asistenciasTemp = [];
+async function cargarAlumnos() {
+  const snapshot = await db.collection("alumnos").get();
+  let todosAlumnos = snapshot.docs.map(d => ({id:d.id,...d.data()}));
 
-// ================= LOGIN =================
-async function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  alumnos = usuarioActual.rol==="admin" ? todosAlumnos 
+          : todosAlumnos.filter(a => a.aula_id==usuarioActual.aula_id);
 
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    const snapshot = await db.collection("usuarios").where("email","==",email).get();
-    if(snapshot.empty) throw "No existe usuario";
+  llenarSelectEditar();
+  mostrarListaAlumnos();
+  mostrarTablaAsistencia();
+  actualizarDashboard();
+}
 
-    usuarioActual = snapshot.docs[0].data();
+function llenarSelectEditar() {
+  const select = document.getElementById("editarAlumnoSelect");
+  select.innerHTML = "<option value=''>Nuevo Alumno</option>";
+  alumnos.forEach(a=>{
+    const opt = document.createElement("option");
+    opt.value = a.id;
+    opt.text = a.nombre;
+    select.add(opt);
+  });
 
-    document.getElementById("loginDiv").style.display = "none";
-    document.getElementById("appDiv").style.display = "flex";
-    document.getElementById("welcome").innerText = `Bienvenido, ${usuarioActual.nombre}`;
-
-    cargarAlumnos();
-    actualizarDashboard();
-  } catch(e) {
-    document.getElementById("loginError").innerText = "Correo o clave incorrecta";
-    console.log(e);
+  select.onchange = () => {
+    const id = select.value;
+    if(id===""){
+      document.getElementById("nombreAlumno").value = "";
+      document.getElementById("edadAlumno").value = "";
+      document.getElementById("aulaAlumno").value = "1";
+    } else {
+      const a = alumnos.find(x=>x.id===id);
+      document.getElementById("nombreAlumno").value = a.nombre;
+      document.getElementById("edadAlumno").value = a.edad;
+      document.getElementById("aulaAlumno").value = a.aula_id;
+    }
   }
 }
 
-// ================= LOGOUT =================
-function logout() {
-  auth.signOut();
-  usuarioActual = null;
-  document.getElementById("appDiv").style.display = "none";
-  document.getElementById("loginDiv").style.display = "block";
-}
-
-// ================= SECCIONES =================
-function mostrarSeccion(id) {
-  document.querySelectorAll(".section").forEach(s => s.style.display = "none");
-  document.getElementById(id).style.display = "block";
-}
-
-// ================= ALUMNOS =================
-async function cargarAlumnos() {
-  const snapshot = await db.collection("alumnos").get();
-  let todosAlumnos = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-
-  alumnos = usuarioActual.rol === "admin" 
-            ? todosAlumnos 
-            : todosAlumnos.filter(a => a.aula_id == usuarioActual.aula_id);
-
-  mostrarTablaAlumnos();
-  mostrarTablaAsistencia();
-}
-
-function mostrarTablaAlumnos() {
-  const tbody = document.getElementById("tablaAlumnos");
-  tbody.innerHTML = "";
-  alumnos.forEach(a => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${a.nombre}</td><td>${a.edad}</td><td>${a.aula_id}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-// ================= GUARDAR ALUMNO =================
 async function guardarAlumno() {
   const nombre = document.getElementById("nombreAlumno").value;
   const edad = parseInt(document.getElementById("edadAlumno").value);
   const aula_id = parseInt(document.getElementById("aulaAlumno").value);
+  const select = document.getElementById("editarAlumnoSelect");
 
-  await db.collection("alumnos").add({nombre, edad, aula_id, registrado_por: usuarioActual.nombre});
-  document.getElementById("nombreAlumno").value = "";
-  document.getElementById("edadAlumno").value = "";
+  if(select.value==="") await db.collection("alumnos").add({nombre,edad,aula_id});
+  else await db.collection("alumnos").doc(select.value).update({nombre,edad,aula_id});
+
   cargarAlumnos();
 }
 
-// ================= ASISTENCIAS =================
+function mostrarListaAlumnos() {
+  const div = document.getElementById("listaAlumnos");
+  div.innerHTML = "";
+  alumnos.forEach(a=>{
+    const p = document.createElement("p");
+    p.innerText = `Nombre: ${a.nombre}, Edad: ${a.edad}, Aula: ${a.aula_id}`;
+    div.appendChild(p);
+  });
+}
+
+// ------------------ ASISTENCIAS ------------------
+
 function mostrarTablaAsistencia() {
   const tbody = document.getElementById("tablaAsistencia");
   tbody.innerHTML = "";
-  asistenciasTemp = [];
-
-  alumnos.forEach(a => {
+  alumnos.forEach(a=>{
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${a.nombre}</td><td><input type="checkbox" data-id="${a.id}"></td>`;
+    tr.innerHTML = `
+      <td>${a.nombre}</td>
+      <td><input type="checkbox" data-id="${a.id}"></td>
+    `;
     tbody.appendChild(tr);
+  });
+
+  document.getElementById("fechaAsistencia").onchange = cargarAsistenciasPorFecha;
+}
+
+async function cargarAsistenciasPorFecha() {
+  const fecha = document.getElementById("fechaAsistencia").value;
+  if(!fecha) return;
+
+  const snapshot = await db.collection("asistencias").where("fecha","==",fecha).get();
+  const registros = snapshot.docs.map(d=>d.data());
+
+  document.querySelectorAll("#tablaAsistencia input[type=checkbox]").forEach(cb=>{
+    const id_alumno = cb.dataset.id;
+    const r = registros.find(x=>x.alumno_id===id_alumno);
+    cb.checked = r ? r.asistio : false;
   });
 }
 
 async function guardarAsistencias() {
-  const checkboxes = document.querySelectorAll("#tablaAsistencia input[type=checkbox]");
-  const fecha = new Date().toISOString().slice(0,10);
+  const fecha = document.getElementById("fechaAsistencia").value;
+  if(!fecha){ alert("Selecciona fecha"); return; }
 
-  for(let cb of checkboxes) {
+  const checkboxes = document.querySelectorAll("#tablaAsistencia input[type=checkbox]");
+  for(let cb of checkboxes){
     const id_alumno = cb.dataset.id;
     const asistio = cb.checked;
 
-    await db.collection("asistencias").add({alumno_id: id_alumno, fecha, asistio, registrado_por: usuarioActual.nombre});
+    const snapshot = await db.collection("asistencias")
+      .where("fecha","==",fecha)
+      .where("alumno_id","==",id_alumno)
+      .get();
+
+    if(snapshot.empty){
+      await db.collection("asistencias").add({
+        alumno_id:id_alumno,
+        fecha,
+        asistio,
+        registrado_por: usuarioActual.nombre
+      });
+    } else {
+      const docId = snapshot.docs[0].id;
+      await db.collection("asistencias").doc(docId).update({asistio});
+    }
   }
 
-  alert("Asistencias registradas");
-  cargarAlumnos();
+  alert("Asistencias guardadas");
+  actualizarDashboard();
 }
 
-// ================= DASHBOARD =================
+// ------------------ DASHBOARD ------------------
+
 async function actualizarDashboard() {
-  document.getElementById("totalAlumnos").innerText = alumnos.length;
+  const statsDiv = document.getElementById("dashboardStats");
+  const alumnosSnap = await db.collection("alumnos").get();
+  const asistenciasSnap = await db.collection("asistencias").get();
 
-  const snapshot = await db.collection("asistencias").get();
-  document.getElementById("totalAsistencias").innerText = snapshot.size;
+  const totalAlumnos = alumnosSnap.size;
+  const asistencias = asistenciasSnap.docs.map(d=>d.data());
 
-  document.getElementById("miAula").innerText = usuarioActual.aula_id ? usuarioActual.aula_id : "Admin";
+  // Contar asistencias por alumno
+  const conteo = {};
+  alumnosSnap.docs.forEach(d=>{ conteo[d.id]=0; });
+  asistencias.forEach(a=>{
+    if(a.asistio) conteo[a.alumno_id]++;
+  });
+
+  const maxAsistencias = Math.max(...Object.values(conteo));
+  const minAsistencias = Math.min(...Object.values(conteo));
+
+  statsDiv.innerHTML = `
+    <p>Total alumnos: ${totalAlumnos}</p>
+    <p>Mayor asistencia: ${Object.keys(conteo).find(k=>conteo[k]===maxAsistencias)}</p>
+    <p>Menor asistencia: ${Object.keys(conteo).find(k=>conteo[k]===minAsistencias)}</p>
+  `;
 }
