@@ -1,5 +1,6 @@
 let usuarioActual = null;
 let alumnos = [];
+let maestros = [];
 
 // LOGIN
 async function login() {
@@ -7,20 +8,14 @@ async function login() {
   const password = document.getElementById("password").value;
 
   try {
-    await firebase.auth().signInWithEmailAndPassword(email,password);
-    const snapshot = await firebase.firestore().collection("usuarios").where("email","==",email).get();
-    if(snapshot.empty) throw "Usuario no encontrado";
+    await auth.signInWithEmailAndPassword(email, password);
+    const snapshot = await db.collection("usuarios").where("email","==",email).get();
     usuarioActual = snapshot.docs[0].data();
-    usuarioActual.uid = snapshot.docs[0].id;
 
     document.getElementById("loginDiv").style.display = "none";
     document.getElementById("appDiv").style.display = "block";
-    document.getElementById("welcome").innerText = `Bienvenido, ${usuarioActual.nombre}`;
 
-    // Mostrar sección admin
-    if(usuarioActual.rol === "admin") document.getElementById("adminBtn").style.display = "inline";
-
-    cargarAlumnos();
+    cargarDashboard();
   } catch(e) {
     document.getElementById("loginError").innerText = "Correo o clave incorrecta";
   }
@@ -28,168 +23,182 @@ async function login() {
 
 // LOGOUT
 function logout() {
-  firebase.auth().signOut();
+  auth.signOut();
   usuarioActual = null;
   document.getElementById("appDiv").style.display = "none";
   document.getElementById("loginDiv").style.display = "block";
 }
 
-// Mostrar secciones
-function mostrarSeccion(id) {
-  ["alumnosDiv","asistenciasDiv","maestrosDiv"].forEach(d => document.getElementById(d).style.display="none");
-  document.getElementById(id).style.display = "block";
+// CARGAR DASHBOARD
+async function cargarDashboard() {
+  // Crear HTML del dashboard
+  document.getElementById("appDiv").innerHTML = `
+    <div class="sidebar">
+      <h2>Rey de Reyes</h2>
+      <a href="#" onclick="mostrarSeccion('dashboard')">Dashboard</a>
+      <a href="#" onclick="mostrarSeccion('alumnos')">Alumnos</a>
+      ${usuarioActual.rol==='admin'?'<a href="#" onclick="mostrarSeccion(\'maestros\')">Maestros</a>':''}
+      <a href="#" onclick="logout()">Cerrar sesión</a>
+    </div>
+    <div class="main" id="mainContent"></div>
+  `;
+  mostrarSeccion('dashboard');
+}
 
-  if(id==="alumnosDiv" || id==="asistenciasDiv") cargarAlumnos();
+// FUNCION PARA MOSTRAR SECCIONES
+function mostrarSeccion(seccion) {
+  const main = document.getElementById("mainContent");
+  if(seccion==='dashboard') {
+    main.innerHTML = `<h2>Dashboard</h2><div id="dashboardCards"></div>`;
+    cargarDashboardStats();
+  } else if(seccion==='alumnos') {
+    main.innerHTML = `<h2>Alumnos</h2>
+      <button onclick="mostrarFormAlumno()">Agregar Alumno</button>
+      <div id="formAlumno" style="display:none;"></div>
+      <div id="listaAlumnos" class="table-container"></div>`;
+    cargarAlumnos();
+  } else if(seccion==='maestros' && usuarioActual.rol==='admin') {
+    main.innerHTML = `<h2>Maestros</h2>
+      <button onclick="mostrarFormMaestro()">Agregar Maestro</button>
+      <div id="formMaestro" style="display:none;"></div>
+      <div id="listaMaestros" class="table-container"></div>`;
+    cargarMaestros();
+  }
+}
+
+// DASHBOARD STATS
+async function cargarDashboardStats() {
+  const dash = document.getElementById("dashboardCards");
+  const alumnosSnap = await db.collection("alumnos").get();
+  const maestrosSnap = await db.collection("usuarios").where("rol","==","maestro").get();
+  const asistenciasSnap = await db.collection("asistencias").get();
+
+  const totalAlumnos = alumnosSnap.size;
+  const totalMaestros = maestrosSnap.size;
+
+  // Alumnos con más y menos asistencia
+  const asistencias = asistenciasSnap.docs.map(d=>d.data());
+  const conteo = {};
+  asistencias.forEach(a=>{
+    conteo[a.alumno_id] = (conteo[a.alumno_id]||0)+ (a.asistio?1:0);
+  });
+
+  let mas = '', menos='';
+  if(Object.keys(conteo).length>0){
+    const sorted = Object.entries(conteo).sort((a,b)=>b[1]-a[1]);
+    mas = sorted[0][0]; menos = sorted[sorted.length-1][0];
+  }
+
+  dash.innerHTML = `
+    <div class="card">Total Alumnos: ${totalAlumnos}</div>
+    <div class="card">Total Maestros: ${totalMaestros}</div>
+    <div class="card">Mayor asistencia: ${mas}</div>
+    <div class="card">Menor asistencia: ${menos}</div>
+  `;
 }
 
 // CARGAR ALUMNOS
 async function cargarAlumnos() {
-  const snapshot = await firebase.firestore().collection("alumnos").get();
-  let todosAlumnos = snapshot.docs.map(d=>({id:d.id,...d.data()}));
-
-  alumnos = usuarioActual.rol === "admin"
-            ? todosAlumnos
-            : todosAlumnos.filter(a => Number(a.aula_id) === Number(usuarioActual.aula_id));
-
-  llenarSelectAlumnos();
-  llenarSelectEditar();
+  const snap = await db.collection("alumnos").get();
+  alumnos = snap.docs.map(d=>({id:d.id,...d.data()}));
   mostrarListaAlumnos();
 }
 
-// LLENAR SELECT ASISTENCIA
-function llenarSelectAlumnos() {
-  const select = document.getElementById("alumnoSelect");
-  select.innerHTML = "";
-  alumnos.forEach(a=>{
-    const opt = document.createElement("option");
-    opt.value = a.id;
-    opt.text = a.nombre;
-    select.add(opt);
+// MOSTRAR LISTA DE ALUMNOS
+function mostrarListaAlumnos() {
+  const div = document.getElementById("listaAlumnos");
+  if(!div) return;
+  let html = '<table><tr><th>Nombre</th><th>Edad</th><th>Aula</th><th>Asistencia</th></tr>';
+  alumnos.filter(a=>usuarioActual.rol==='admin'?true:a.aula_id===usuarioActual.aula_id)
+    .forEach(a=>{
+      html+=`<tr>
+        <td>${a.nombre}</td>
+        <td>${a.edad}</td>
+        <td>${a.aula_id}</td>
+        <td><input type="checkbox" onchange="registrarAsistencia('${a.id}',this.checked)"></td>
+      </tr>`;
+    });
+  html+='</table>';
+  div.innerHTML = html;
+}
+
+// REGISTRAR ASISTENCIA
+async function registrarAsistencia(id, asistio) {
+  await db.collection("asistencias").add({
+    alumno_id: id,
+    fecha: new Date().toISOString().slice(0,10),
+    asistio,
+    registradoPor: usuarioActual.nombre
   });
 }
 
-// LLENAR SELECT EDITAR
-function llenarSelectEditar() {
-  const select = document.getElementById("editarAlumnoSelect");
-  select.innerHTML = "<option value=''>Nuevo Alumno</option>";
-  alumnos.forEach(a=>{
-    const opt = document.createElement("option");
-    opt.value = a.id;
-    opt.text = a.nombre;
-    select.add(opt);
-  });
-
-  select.onchange = ()=>{
-    const id = select.value;
-    if(id===""){
-      document.getElementById("nombreAlumno").value="";
-      document.getElementById("edadAlumno").value="";
-    } else {
-      const alum = alumnos.find(x=>x.id===id);
-      document.getElementById("nombreAlumno").value = alum.nombre;
-      document.getElementById("edadAlumno").value = alum.edad;
-    }
-  }
-
-  // Mostrar selector aula solo admin
-  document.getElementById("aulaAlumno").style.display = usuarioActual.rol==="admin" ? "inline" : "none";
+// FORMULARIO ALUMNO
+function mostrarFormAlumno() {
+  const div = document.getElementById("formAlumno");
+  div.style.display = div.style.display==='none'?'block':'none';
+  div.innerHTML = `
+    <input type="text" id="nombreAlumno" placeholder="Nombre">
+    <input type="number" id="edadAlumno" placeholder="Edad">
+    <select id="aulaAlumno">
+      <option value="1">Escogidos con Propósitos (8-12 años)</option>
+      <option value="2">Los Amigos de Dios (3-7 años)</option>
+    </select>
+    <button onclick="guardarAlumno()">Guardar Alumno</button>
+  `;
 }
 
 // GUARDAR ALUMNO
 async function guardarAlumno() {
   const nombre = document.getElementById("nombreAlumno").value;
   const edad = parseInt(document.getElementById("edadAlumno").value);
-  const select = document.getElementById("editarAlumnoSelect");
+  const aula = parseInt(document.getElementById("aulaAlumno").value);
 
-  let aula;
-  if(usuarioActual.rol==="admin") {
-    aula = Number(document.getElementById("aulaAlumno").value);
-  } else {
-    aula = usuarioActual.aula_id;
-  }
-
-  if(select.value==="") {
-    await firebase.firestore().collection("alumnos").add({
-      nombre,
-      edad,
-      aula_id: aula,
-      registrado_por: usuarioActual.nombre,
-      maestro_id: usuarioActual.uid
-    });
-    alert("Alumno agregado");
-  } else {
-    await firebase.firestore().collection("alumnos").doc(select.value).update({nombre,edad});
-    alert("Alumno actualizado");
-  }
-
+  await db.collection("alumnos").add({nombre, edad, aula_id:aula, registradoPor:usuarioActual.nombre});
+  alert("Alumno registrado");
   cargarAlumnos();
 }
 
-// MOSTRAR LISTA
-function mostrarListaAlumnos() {
-  const div = document.getElementById("listaAlumnos");
-  div.innerHTML = "";
-  alumnos.forEach(a=>{
-    const p = document.createElement("p");
-    p.innerText = `Nombre: ${a.nombre}, Edad: ${a.edad}, Aula: ${a.aula_id}, Registrado por: ${a.registrado_por}`;
-    div.appendChild(p);
-  });
+// FORMULARIO MAESTRO
+function mostrarFormMaestro() {
+  const div = document.getElementById("formMaestro");
+  div.style.display = div.style.display==='none'?'block':'none';
+  div.innerHTML = `
+    <input type="text" id="nombreMaestro" placeholder="Nombre">
+    <input type="email" id="emailMaestro" placeholder="Correo">
+    <input type="password" id="passMaestro" placeholder="Contraseña">
+    <select id="aulaMaestro">
+      <option value="1">Escogidos con Propósitos (8-12 años)</option>
+      <option value="2">Los Amigos de Dios (3-7 años)</option>
+    </select>
+    <button onclick="guardarMaestro()">Guardar Maestro</button>
+  `;
 }
 
-// REGISTRAR ASISTENCIA
-async function registrarAsistenciaUI() {
-  const id = document.getElementById("alumnoSelect").value;
-  const asistio = document.getElementById("asistioCheck").checked;
-  const fecha = new Date().toISOString().slice(0,10);
-  const alumno = alumnos.find(a=>a.id===id);
-
-  await firebase.firestore().collection("asistencias").add({
-    alumno_id: id,
-    alumno_nombre: alumno.nombre,
-    fecha,
-    asistio,
-    aula_id: alumno.aula_id,
-    maestro_id: usuarioActual.uid,
-    maestro_nombre: usuarioActual.nombre
-  });
-
-  alert("Asistencia registrada");
-  mostrarHistorial();
-}
-
-// HISTORIAL
-async function mostrarHistorial() {
-  const div = document.getElementById("historialLista");
-  div.innerHTML = "";
-  const snapshot = await firebase.firestore().collection("asistencias").get();
-  let asistencias = snapshot.docs.map(d=>d.data());
-
-  if(usuarioActual.rol!=="admin") {
-    const idsAula = alumnos.map(a=>a.id);
-    asistencias = asistencias.filter(a=>idsAula.includes(a.alumno_id));
-  }
-
-  asistencias.forEach(a=>{
-    const p = document.createElement("p");
-    p.innerText = `${a.alumno_nombre} - ${a.fecha} - ${a.asistio?"Asistió":"No asistió"} - Registrado por: ${a.maestro_nombre}`;
-    div.appendChild(p);
-  });
-}
-
-// REGISTRAR MAESTRO (solo admin)
-async function registrarMaestro() {
+// GUARDAR MAESTRO
+async function guardarMaestro() {
   const nombre = document.getElementById("nombreMaestro").value;
   const email = document.getElementById("emailMaestro").value;
   const pass = document.getElementById("passMaestro").value;
-  const aula = Number(document.getElementById("aulaMaestro").value);
+  const aula = parseInt(document.getElementById("aulaMaestro").value);
 
-  const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
-  await firebase.firestore().collection("usuarios").doc(cred.user.uid).set({
-    nombre,
-    email,
-    rol: "maestro",
-    aula_id: aula
+  const cred = await auth.createUserWithEmailAndPassword(email, pass);
+  await db.collection("usuarios").doc(cred.user.uid).set({
+    nombre, email, rol:"maestro", aula_id:aula
   });
-
   alert("Maestro registrado");
+  cargarMaestros();
+}
+
+// CARGAR MAESTROS
+async function cargarMaestros() {
+  const snap = await db.collection("usuarios").where("rol","==","maestro").get();
+  maestros = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const div = document.getElementById("listaMaestros");
+  if(!div) return;
+  let html = '<table><tr><th>Nombre</th><th>Email</th><th>Aula</th></tr>';
+  maestros.forEach(m=>{
+    html+=`<tr><td>${m.nombre}</td><td>${m.email}</td><td>${m.aula_id}</td></tr>`;
+  });
+  html+='</table>';
+  div.innerHTML = html;
 }
