@@ -1,262 +1,174 @@
 let usuarioActual = null;
 let alumnos = [];
 let maestros = [];
-let asistenciasGuardadas = [];
+let aulas = [];
+let asistencias = [];
 
-// LOGIN
+// ================= LOGIN =================
 async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-
     try {
-        await auth.signInWithEmailAndPassword(email, password);
-        const snapshot = await db.collection("usuarios").where("email", "==", email).get();
+        await auth.signInWithEmailAndPassword(email,password);
+        const snapshot = await db.collection("usuarios").where("email","==",email).get();
         usuarioActual = snapshot.docs[0].data();
-
-        document.getElementById("loginDiv").style.display = "none";
-        document.getElementById("appDiv").style.display = "flex";
         document.getElementById("welcome").innerText = `Bienvenido, ${usuarioActual.nombre}`;
-
-        cargarAlumnos();
-        cargarMaestros();
-        cargarDashboard();
-    } catch (e) {
+        cargarDatos();
+    } catch(e) {
         document.getElementById("loginError").innerText = "Correo o clave incorrecta";
     }
 }
 
-// LOGOUT
 function logout() {
     auth.signOut();
     usuarioActual = null;
-    document.getElementById("appDiv").style.display = "none";
-    document.getElementById("loginDiv").style.display = "block";
+    window.location.href = "login.html";
 }
 
-// SECCIONES
-function mostrarSeccion(id) {
-    document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-
-    if(id === 'asistencias') mostrarListaAsistencias();
+// ================= CARGAR DATOS =================
+async function cargarDatos() {
+    await cargarAulas();
+    await cargarAlumnos();
+    await cargarMaestros();
+    await cargarAsistencias();
+    mostrarSeccion('dashboard');
+    llenarSelects();
+    mostrarDashboard();
 }
 
-// CARGAR ALUMNOS
+// ================= SECCIONES =================
+function mostrarSeccion(seccion) {
+    document.querySelectorAll('.seccion').forEach(div => div.style.display='none');
+    document.getElementById(seccion).style.display='block';
+    if(seccion=='listaAlumnos') mostrarListaAlumnos();
+    if(seccion=='asistencia') mostrarListaAsistencia();
+}
+
+// ================= AULAS =================
+async function cargarAulas() {
+    const snapshot = await db.collection("aulas").get();
+    aulas = snapshot.docs.map(d => ({id:d.id,...d.data()}));
+    mostrarListaAulas();
+}
+
+async function guardarAula() {
+    const nombre = document.getElementById("nombreAula").value;
+    if(nombre==="") return;
+    await db.collection("aulas").add({nombre});
+    document.getElementById("nombreAula").value="";
+    cargarAulas();
+}
+
+function mostrarListaAulas() {
+    const div = document.getElementById("listaAulas");
+    div.innerHTML="";
+    aulas.forEach(a=>{ div.innerHTML+=`<p>${a.nombre}</p>` });
+}
+
+// ================= MAESTROS =================
+async function cargarMaestros() {
+    const snapshot = await db.collection("maestros").get();
+    maestros = snapshot.docs.map(d => ({id:d.id,...d.data()}));
+    mostrarListaMaestros();
+}
+
+async function guardarMaestro() {
+    const nombre = document.getElementById("nombreMaestro").value;
+    const email = document.getElementById("emailMaestro").value;
+    const clave = document.getElementById("claveMaestro").value;
+    const aula_id = document.getElementById("aulaMaestro").value;
+    if(!nombre||!email||!clave) return;
+    await auth.createUserWithEmailAndPassword(email,clave);
+    await db.collection("maestros").add({nombre,email,aula_id});
+    document.getElementById("nombreMaestro").value="";
+    document.getElementById("emailMaestro").value="";
+    document.getElementById("claveMaestro").value="";
+    cargarMaestros();
+}
+
+function mostrarListaMaestros() {
+    const div = document.getElementById("listaMaestros");
+    div.innerHTML="";
+    maestros.forEach(m=>{ div.innerHTML+=`<p>${m.nombre} - Aula: ${getAulaNombre(m.aula_id)}</p>` });
+}
+
+// ================= ALUMNOS =================
 async function cargarAlumnos() {
     const snapshot = await db.collection("alumnos").get();
-    let todosAlumnos = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-
-    alumnos = usuarioActual.rol === "admin" 
-              ? todosAlumnos 
-              : todosAlumnos.filter(a => a.aula_id == usuarioActual.aula_id);
-
-    llenarSelectAlumnos();
-    llenarSelectEditar();
+    let todos = snapshot.docs.map(d => ({id:d.id,...d.data()}));
+    alumnos = usuarioActual.rol=="admin"?todos:todos.filter(a=>a.aula_id==usuarioActual.aula_id);
     mostrarListaAlumnos();
 }
 
-// LLENAR SELECT ASISTENCIA
-function llenarSelectAlumnos() {
-    // Ya lo usaremos en checklist de asistencias
-}
-
-// LLENAR SELECT EDITAR
-function llenarSelectEditar() {
-    const select = document.getElementById("editarAlumnoSelect");
-    select.innerHTML = "<option value=''>Nuevo Alumno</option>";
-    alumnos.forEach(a => {
-        const opt = document.createElement("option");
-        opt.value = a.id;
-        opt.text = a.nombre;
-        select.add(opt);
-    });
-
-    select.onchange = () => {
-        const id = select.value;
-        if(id === "") {
-            document.getElementById("nombreAlumno").value = "";
-            document.getElementById("edadAlumno").value = "";
-        } else {
-            const alum = alumnos.find(x => x.id===id);
-            document.getElementById("nombreAlumno").value = alum.nombre;
-            document.getElementById("edadAlumno").value = alum.edad;
-            document.getElementById("aulaSelectAlumno").value = alum.aula_id;
-        }
-    }
-}
-
-// GUARDAR ALUMNO
 async function guardarAlumno() {
     const nombre = document.getElementById("nombreAlumno").value;
-    const edad = parseInt(document.getElementById("edadAlumno").value);
-    const aula = parseInt(document.getElementById("aulaSelectAlumno").value);
-    const select = document.getElementById("editarAlumnoSelect");
-
-    if(select.value === "") {
-        await db.collection("alumnos").add({nombre, edad, aula_id: aula});
-        alert("Alumno agregado");
-    } else {
-        await db.collection("alumnos").doc(select.value).update({nombre, edad, aula_id: aula});
-        alert("Alumno actualizado");
-    }
-
+    const edad = document.getElementById("edadAlumno").value;
+    const aula_id = document.getElementById("aulaAlumno").value;
+    await db.collection("alumnos").add({nombre,edad,aula_id});
+    document.getElementById("nombreAlumno").value="";
+    document.getElementById("edadAlumno").value="";
     cargarAlumnos();
 }
 
-// MOSTRAR LISTA DE ALUMNOS
 function mostrarListaAlumnos() {
     const div = document.getElementById("listaAlumnos");
-    div.innerHTML = "";
-    alumnos.forEach(a => {
-        const p = document.createElement("p");
-        p.innerText = `Nombre: ${a.nombre}, Edad: ${a.edad}, Aula: ${aulaTexto(a.aula_id)}`;
-        div.appendChild(p);
-    });
+    div.innerHTML="";
+    alumnos.forEach(a=>{ div.innerHTML+=`<p>${a.nombre} - Edad: ${a.edad} - Aula: ${getAulaNombre(a.aula_id)}</p>` });
 }
 
-function aulaTexto(id){
-    if(id==1) return "Escogidos con Propósito (8-12 años)";
-    if(id==2) return "Amigos de Dios (3-7 años)";
-    return "Admin";
-}
-
-// ASISTENCIAS
-async function mostrarListaAsistencias() {
-    const fecha = document.getElementById("fechaAsistencia").value || new Date().toISOString().slice(0,10);
-    const div = document.getElementById("listaAsistencias");
-    div.innerHTML = "";
-
-    const snapshot = await db.collection("alumnos").get();
-    const listaAlumnos = snapshot.docs.map(d => ({id: d.id, ...d.data()}))
-                        .filter(a => usuarioActual.rol!=="admin" ? a.aula_id==usuarioActual.aula_id : true);
-
-    const asistenciaSnapshot = await db.collection("asistencias")
-        .where("fecha","==",fecha).get();
-    const asistencias = asistenciaSnapshot.docs.map(d=>d.data());
-
-    asistenciasGuardadas = asistencias;
-
-    listaAlumnos.forEach(a => {
-        const p = document.createElement("p");
-        const chk = document.createElement("input");
-        chk.type="checkbox";
-        chk.checked = asistencias.find(x=>x.alumno_id===a.id)?.asistio || false;
-        chk.dataset.id = a.id;
-        p.appendChild(chk);
-        p.append(` ${a.nombre} (${aulaTexto(a.aula_id)})`);
-        div.appendChild(p);
-    });
-}
-
-// GUARDAR ASISTENCIAS
-async function guardarAsistencias() {
-    const fecha = document.getElementById("fechaAsistencia").value || new Date().toISOString().slice(0,10);
-    const checkboxes = document.querySelectorAll("#listaAsistencias input[type=checkbox]");
-
-    for(let chk of checkboxes){
-        const id = chk.dataset.id;
-        const asistio = chk.checked;
-
-        // Verificar si ya existe
-        const existSnapshot = await db.collection("asistencias")
-            .where("alumno_id","==",id)
-            .where("fecha","==",fecha)
-            .get();
-
-        if(existSnapshot.empty){
-            await db.collection("asistencias").add({alumno_id:id, fecha, asistio});
-        } else {
-            await db.collection("asistencias").doc(existSnapshot.docs[0].id).update({asistio});
-        }
-    }
-
-    alert("Asistencias guardadas");
-    mostrarListaAsistencias();
-}
-
-// DESCARGAR CSV
-function descargarCSV(){
-    let csv = "Nombre,Aula,Fecha,Asistió\n";
-    const fecha = document.getElementById("fechaAsistencia").value || new Date().toISOString().slice(0,10);
-    alumnos.forEach(a=>{
-        const chk = document.querySelector(`#listaAsistencias input[data-id='${a.id}']`);
-        const asistio = chk ? chk.checked : false;
-        csv += `${a.nombre},${aulaTexto(a.aula_id)},${fecha},${asistio}\n`;
-    });
-    const blob = new Blob([csv], {type: "text/csv"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "asistencias.csv";
-    a.click();
-}
-
-// DASHBOARD
-async function cargarDashboard(){
-    const totalAlumnos = alumnos.length;
-    let html = `<p>Total alumnos: ${totalAlumnos}</p>`;
-
+// ================= ASISTENCIA =================
+async function cargarAsistencias() {
     const snapshot = await db.collection("asistencias").get();
-    const asistencias = snapshot.docs.map(d=>d.data());
-    const count = {};
+    asistencias = snapshot.docs.map(d => ({id:d.id,...d.data()}));
+}
+
+function mostrarListaAsistencia() {
+    const div = document.getElementById("listaAsistencia");
+    div.innerHTML="";
+    const fecha = document.getElementById("fechaAsistencia").value || new Date().toISOString().slice(0,10);
     alumnos.forEach(a=>{
-        count[a.id] = asistencias.filter(x=>x.alumno_id===a.id && x.asistio).length;
+        div.innerHTML+=`
+        <p>
+            ${a.nombre} - 
+            <input type="checkbox" data-id="${a.id}" ${asistencias.some(x=>x.alumno_id==a.id && x.fecha==fecha) ? "checked" : ""}>
+        </p>`;
     });
-    const max = Math.max(...Object.values(count));
-    const min = Math.min(...Object.values(count));
-    html += `<p>Más asistencias: ${alumnos.find(a=>count[a.id]===max)?.nombre || "N/A"} (${max})</p>`;
-    html += `<p>Menos asistencias: ${alumnos.find(a=>count[a.id]===min)?.nombre || "N/A"} (${min})</p>`;
-
-    document.getElementById("dashboardStats").innerHTML = html;
 }
 
-// MAESTROS
-async function cargarMaestros(){
-    if(usuarioActual.rol!=="admin") return;
-    const snapshot = await db.collection("usuarios").get();
-    maestros = snapshot.docs.map(d=>({id:d.id,...d.data()}));
-    const select = document.getElementById("editarMaestroSelect");
-    select.innerHTML = "<option value=''>Nuevo Maestro</option>";
-    maestros.forEach(m=>{
-        const opt = document.createElement("option");
-        opt.value = m.id;
-        opt.text = m.nombre;
-        select.add(opt);
-    });
-
-    select.onchange = () => {
-        const id = select.value;
-        if(id===""){
-            document.getElementById("nombreMaestro").value="";
-            document.getElementById("emailMaestro").value="";
-            document.getElementById("passwordMaestro").value="";
-            document.getElementById("aulaSelectMaestro").value="0";
-        } else {
-            const m = maestros.find(x=>x.id===id);
-            document.getElementById("nombreMaestro").value=m.nombre;
-            document.getElementById("emailMaestro").value=m.email;
-            document.getElementById("passwordMaestro").value="";
-            document.getElementById("aulaSelectMaestro").value=m.aula_id;
-        }
+async function guardarAsistencia() {
+    const fecha = document.getElementById("fechaAsistencia").value || new Date().toISOString().slice(0,10);
+    const checkboxes = document.querySelectorAll('#listaAsistencia input[type=checkbox]');
+    for(let c of checkboxes){
+        const alumno_id = c.dataset.id;
+        const asistio = c.checked;
+        await db.collection("asistencias").add({alumno_id,fecha,asistio});
     }
+    alert("Asistencias guardadas");
+    cargarAsistencias();
 }
 
-// GUARDAR MAESTRO
-async function guardarMaestro(){
-    const nombre = document.getElementById("nombreMaestro").value;
-    const email = document.getElementById("emailMaestro").value;
-    const password = document.getElementById("passwordMaestro").value;
-    const aula = parseInt(document.getElementById("aulaSelectMaestro").value);
-    const select = document.getElementById("editarMaestroSelect");
+// ================= DASHBOARD =================
+function mostrarDashboard() {
+    const div = document.getElementById("estadisticas");
+    const totalAlumnos = alumnos.length;
+    const totalAsistencias = asistencias.filter(a=>a.asistio).length;
+    div.innerHTML = `<p>Total alumnos: ${totalAlumnos}</p>
+                     <p>Total asistencias registradas: ${totalAsistencias}</p>`;
+}
 
-    if(select.value===""){
-        const cred = await auth.createUserWithEmailAndPassword(email,password);
-        await db.collection("usuarios").doc(cred.user.uid).set({nombre,email,aula_id:aula,rol:aula===0?"admin":"maestro"});
-        alert("Maestro agregado");
-    } else {
-        await db.collection("usuarios").doc(select.value).update({nombre,email,aula_id:aula});
-        alert("Maestro actualizado");
-    }
+// ================= UTIL =================
+function getAulaNombre(aula_id) {
+    const a = aulas.find(x=>x.id==aula_id);
+    return a?a.nombre:"Sin Aula";
+}
 
-    cargarMaestros();
+function llenarSelects() {
+    const selectAulaAlumno = document.getElementById("aulaAlumno");
+    const selectAulaMaestro = document.getElementById("aulaMaestro");
+    selectAulaAlumno.innerHTML="";
+    selectAulaMaestro.innerHTML="";
+    aulas.forEach(a=>{
+        selectAulaAlumno.innerHTML+=`<option value="${a.id}">${a.nombre}</option>`;
+        selectAulaMaestro.innerHTML+=`<option value="${a.id}">${a.nombre}</option>`;
+    });
 }
