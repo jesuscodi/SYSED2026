@@ -2,15 +2,109 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Escuela Dominical - Dashboard</title>
+  <title>Escuela Dominical | Rey de Reyes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ESTILOS -->
   <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <!-- FIREBASE SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- CONFIG FIREBASE -->
   <script src="firebase-config.js"></script>
-  <script defer src="app.js"></script>
 </head>
 <body>
-  <div id="appDiv"></div>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginDiv" class="login-container">
+  <h2>Escuela Dominical</h2>
+  <h3>Rey de Reyes</h3>
+
+  <input type="email" id="email" placeholder="Correo electrónico">
+  <input type="password" id="password" placeholder="Contraseña">
+
+  <button onclick="login()">Ingresar</button>
+  <p id="loginError" class="error"></p>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="appDiv" style="display:none">
+
+  <!-- HEADER -->
+  <header class="header">
+    <h2 id="welcome"></h2>
+    <button onclick="logout()">Cerrar sesión</button>
+  </header>
+
+  <!-- DASHBOARD -->
+  <section class="dashboard">
+    <div class="card">
+      <h3>Total Alumnos</h3>
+      <p id="totalAlumnos">0</p>
+    </div>
+    <div class="card">
+      <h3>Asistencias</h3>
+      <p id="totalAsistencias">0</p>
+    </div>
+    <div class="card">
+      <h3>Mi Aula</h3>
+      <p id="miAula"></p>
+    </div>
+  </section>
+
+  <!-- ================= ALUMNOS ================= -->
+  <section class="section">
+    <h3>Gestión de Alumnos</h3>
+
+    <select id="editarAlumnoSelect"></select>
+
+    <input type="text" id="nombreAlumno" placeholder="Nombre del alumno">
+    <input type="number" id="edadAlumno" placeholder="Edad">
+
+    <!-- SOLO ADMIN -->
+    <select id="aulaAlumno">
+      <option value="1">Escogidos con Propósito (8 - 12)</option>
+      <option value="2">Amigos de Dios (3 - 7)</option>
+    </select>
+
+    <button onclick="guardarAlumno()">Guardar Alumno</button>
+
+    <div id="listaAlumnos" class="lista"></div>
+  </section>
+
+  <!-- ================= ASISTENCIA ================= -->
+  <section class="section">
+    <h3>Registrar Asistencia</h3>
+
+    <select id="alumnoSelect"></select>
+    <label>
+      <input type="checkbox" id="asistioCheck">
+      Asistió
+    </label>
+
+    <button onclick="registrarAsistenciaUI()">Registrar</button>
+  </section>
+
+  <!-- ================= HISTORIAL ================= -->
+  <section class="section">
+    <h3>Historial de Asistencias</h3>
+    <button onclick="mostrarHistorial()">Ver Historial</button>
+    <div id="historialLista" class="lista"></div>
+  </section>
+
+  <!-- ================= ADMIN ================= -->
+  <section class="section" id="adminSection" style="display:none">
+    <h3>Maestros</h3>
+    <div id="listaMaestros" class="lista"></div>
+  </section>
+
+</div>
+
+<!-- APP JS -->
+<script src="app.js"></script>
+
 </body>
 </html>
