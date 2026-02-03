@@ -1,49 +1,68 @@
 body {
+  margin:0;
   font-family: Arial, sans-serif;
-  background-color: #f5f6fa;
-  margin: 0;
+  background: #f0f2f5;
 }
 
-.login-container {
-  width: 350px;
-  margin: 100px auto;
-  padding: 30px;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  position: fixed;
+  background: #40739e;
+  color: white;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  padding: 20px;
 }
 
-.login-container h2 {
+.sidebar h2 {
   text-align: center;
-  color: #2f3640;
+  margin-bottom: 30px;
 }
 
-.login-container input {
+.sidebar button {
+  margin: 5px 0;
   padding: 10px;
-  font-size: 14px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.login-container button {
-  padding: 10px;
-  font-size: 16px;
-  background-color: #40739e;
+  background: #2f3640;
   color: white;
   border: none;
-  border-radius: 5px;
   cursor: pointer;
+  border-radius: 5px;
 }
 
-.login-container button:hover {
-  background-color: #2f3640;
+.sidebar button:hover {
+  background: #192a56;
 }
 
-.error {
-  color: red;
-  font-size: 14px;
-  text-align: center;
+.main-content {
+  margin-left: 240px;
+  padding: 20px;
+}
+
+.cards-container {
+  display: flex;
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.alumnos-lista p {
+  background: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 5px 0;
+}
+
+.asistencia-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+  background: #fff;
+  padding: 8px;
+  border-radius: 5px;
 }
