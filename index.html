@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Escuela Dominical Dashboard</title>
+  <title>Escuela Dominical - Dashboard</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
@@ -10,56 +10,53 @@
   <script src="firebase-config.js"></script>
 </head>
 <body>
-  <div id="app" class="app-container" style="display:none">
-    <aside class="menu">
-      <h3>Escuela Dominical</h3>
-      <button onclick="mostrarSeccion('dashboard')">Dashboard</button>
-      <button onclick="mostrarSeccion('alumnos')">Alumnos</button>
-      <button onclick="mostrarSeccion('asistencias')">Asistencias</button>
-      <button onclick="logout()">Cerrar Sesión</button>
-    </aside>
+  <div class="sidebar">
+    <h2>Rey de Reyes</h2>
+    <button onclick="mostrarDashboard()">Dashboard</button>
+    <button onclick="mostrarAlumnos()">Alumnos</button>
+    <button onclick="mostrarAsistencias()">Asistencias</button>
+    <div id="adminMenu">
+      <button onclick="mostrarMaestros()">Maestros</button>
+    </div>
+    <button onclick="logout()">Cerrar Sesión</button>
+  </div>
 
-    <main class="main-content">
-      <section id="dashboard" class="section">
-        <h2>Dashboard</h2>
-        <div id="dashboardStats"></div>
-      </section>
+  <div class="main-content">
+    <!-- Dashboard -->
+    <div id="dashboardDiv">
+      <h2>Dashboard</h2>
+      <p id="bienvenida"></p>
+      <div id="dashboardCards" class="cards-container"></div>
+    </div>
 
-      <section id="alumnos" class="section" style="display:none">
-        <h2>Gestión de Alumnos</h2>
+    <!-- Alumnos -->
+    <div id="alumnosDiv" style="display:none;">
+      <h2>Alumnos</h2>
+      <select id="editarAlumnoSelect"></select>
+      <input type="text" id="nombreAlumno" placeholder="Nombre">
+      <input type="number" id="edadAlumno" placeholder="Edad">
+      <select id="aulaAlumno">
+        <option value="1">Escogidos con Propósitos (8-12)</option>
+        <option value="2">Los Amigos de Dios (3-7)</option>
+      </select>
+      <button onclick="guardarAlumno()">Guardar Alumno</button>
+      <div id="listaAlumnos" class="alumnos-lista"></div>
+    </div>
 
-        <div>
-          <select id="editarAlumnoSelect">
-            <option value="">Nuevo Alumno</option>
-          </select>
-          <input type="text" id="nombreAlumno" placeholder="Nombre">
-          <input type="number" id="edadAlumno" placeholder="Edad">
-          <select id="aulaAlumno">
-            <option value="1">Escogidos con Propósitos (8-12)</option>
-            <option value="2">Los amigos de Dios (3-7)</option>
-          </select>
-          <button onclick="guardarAlumno()">Guardar</button>
-        </div>
+    <!-- Asistencias -->
+    <div id="asistenciasDiv" style="display:none;">
+      <h2>Registrar Asistencias</h2>
+      <input type="date" id="fechaAsistencia">
+      <div id="asistenciasLista"></div>
+      <button onclick="guardarAsistencias()">Guardar Asistencias</button>
+    </div>
 
-        <div id="listaAlumnos"></div>
-      </section>
-
-      <section id="asistencias" class="section" style="display:none">
-        <h2>Asistencias</h2>
-        <label>Selecciona fecha:</label>
-        <input type="date" id="fechaAsistencia" value="">
-        <table>
-          <thead>
-            <tr>
-              <th>Alumno</th>
-              <th>Asistió</th>
-            </tr>
-          </thead>
-          <tbody id="tablaAsistencia"></tbody>
-        </table>
-        <button onclick="guardarAsistencias()">Guardar Asistencias</button>
-      </section>
-    </main>
+    <!-- Maestros -->
+    <div id="maestrosDiv" style="display:none;">
+      <h2>Maestros</h2>
+      <div id="maestrosLista"></div>
+      <button onclick="agregarMaestroUI()">Agregar Maestro</button>
+    </div>
   </div>
 
   <script src="app.js"></script>
