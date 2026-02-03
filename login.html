@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Login Escuela Dominical</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
@@ -11,13 +12,13 @@
 </head>
 <body>
   <div class="login-container">
-    <h2>Login Escuela Dominical</h2>
-    <input type="email" id="email" placeholder="Correo">
+    <h2>Escuela Dominical Rey de Reyes</h2>
+    <input type="email" id="email" placeholder="Correo electrónico">
     <input type="password" id="password" placeholder="Contraseña">
     <button onclick="login()">Ingresar</button>
     <p id="loginError" class="error"></p>
   </div>
 
-  <script src="main.js"></script>
+  <script src="login.js"></script>
 </body>
 </html>
