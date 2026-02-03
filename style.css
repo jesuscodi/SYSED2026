@@ -1,78 +1,49 @@
 body {
   font-family: Arial, sans-serif;
+  background-color: #f5f6fa;
   margin: 0;
-  background: #f5f6fa;
-}
-
-.app-container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.menu {
-  width: 220px;
-  background: #2f3640;
-  color: #f5f6fa;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.menu button {
-  background: #353b48;
-  border: none;
-  color: #f5f6fa;
-  padding: 10px;
-  cursor: pointer;
-}
-
-.menu button:hover {
-  background: #718093;
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-}
-
-.section {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-table, th, td {
-  border: 1px solid #ccc;
-}
-
-th, td {
-  padding: 8px;
-  text-align: left;
 }
 
 .login-container {
-  width: 300px;
+  width: 350px;
   margin: 100px auto;
-  padding: 20px;
-  background: white;
+  padding: 30px;
+  background: #ffffff;
   border-radius: 10px;
-  box-shadow: 0 0 10px #ccc;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
+}
+
+.login-container h2 {
+  text-align: center;
+  color: #2f3640;
 }
 
 .login-container input {
-  padding: 8px;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.login-container button {
+  padding: 10px;
+  font-size: 16px;
+  background-color: #40739e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.login-container button:hover {
+  background-color: #2f3640;
 }
 
 .error {
   color: red;
+  font-size: 14px;
+  text-align: center;
 }
