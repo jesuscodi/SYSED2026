@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Login</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>Login Sistema Asistencia</h2>
+<h2>Sistema de Asistencia</h2>
 
 <input type="email" id="email" placeholder="Correo"><br><br>
 <input type="password" id="password" placeholder="Contraseña"><br><br>
 
-<button id="btnLogin">Ingresar</button>
+<select id="rol">
+  <option value="maestro">Maestro</option>
+  <option value="alumno">Alumno</option>
+</select><br><br>
 
-<p id="mensaje" style="color:red;"></p>
+<button id="btnLogin">Ingresar</button>
+<button id="btnRegistro">Crear Usuario</button>
+
+<p id="mensaje"></p>
 
 <script type="module" src="login.js"></script>
 </body>
