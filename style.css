@@ -1,68 +1,54 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
+  margin: 0;
+  font-family: Arial;
 }
 
-.menu {
-    width: 250px;
-    background: #4CAF50;
-    color: white;
-    padding: 20px;
-    height: 100vh;
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  background: #2c3e50;
+  color: white;
+  position: fixed;
+  padding: 15px;
 }
 
-.menu h2 {
-    margin-top: 0;
+.sidebar button {
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px;
+  background: #34495e;
+  color: white;
+  border: none;
+  cursor: pointer;
 }
 
-.menu ul {
-    list-style: none;
-    padding: 0;
+.content {
+  margin-left: 240px;
+  padding: 20px;
 }
 
-.menu ul li {
-    cursor: pointer;
-    margin: 15px 0;
+.hidden {
+  display: none;
 }
 
-.contenido {
-    flex: 1;
-    padding: 20px;
+.card {
+  background: #f1f1f1;
+  padding: 20px;
+  margin: 10px;
+  display: inline-block;
 }
 
-.seccion {
-    display: none;
+.login-body {
+  background: #2c3e50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-.seccion h3 {
-    margin-top: 0;
-}
-
-input, select, button {
-    margin: 5px 0;
-    padding: 8px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-button {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    opacity: 0.8;
-}
-
-.error {
-    color: red;
-}
-
-#listaAlumnos p, #listaMaestros p, #listaAulas p, #listaAsistencia p {
-    border-bottom: 1px solid #ccc;
-    padding: 5px 0;
+.login-box {
+  background: white;
+  padding: 30px;
+  width: 300px;
+  text-align: center;
 }
