@@ -1,27 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Login</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Inicio</title>
 </head>
 <body>
+  <h1>Bienvenido</h1>
+  <button onclick="logout()">Cerrar sesión</button>
 
-<h2>Sistema de Asistencia</h2>
-
-<input type="email" id="email" placeholder="Correo"><br><br>
-<input type="password" id="password" placeholder="Contraseña"><br><br>
-
-<select id="rol">
-  <option value="maestro">Maestro</option>
-  <option value="alumno">Alumno</option>
-</select><br><br>
-
-<button id="btnLogin">Ingresar</button>
-<button id="btnRegistro">Crear Usuario</button>
-
-<p id="mensaje"></p>
-
-<script type="module" src="login.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase.js"></script>
+  <script src="auth.js"></script>
 </body>
 </html>
