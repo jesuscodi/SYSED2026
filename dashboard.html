@@ -1,0 +1,25 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <h1 id="welcome"></h1>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const rol = params.get("rol");
+
+        if (rol === "admin") {
+            document.getElementById("welcome").textContent = "¡Bienvenido Administrador!";
+        } else if (rol === "maestro") {
+            document.getElementById("welcome").textContent = "¡Bienvenido Maestro!";
+        } else {
+            document.getElementById("welcome").textContent = "Rol desconocido";
+        }
+    </script>
+</body>
+</html>
