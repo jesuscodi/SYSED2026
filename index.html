@@ -1,72 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Escuela Dominical</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Gestión de Asistencia</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="menu">
-        <h2>Escuela Dominical</h2>
-        <p id="welcome"></p>
-        <button onclick="logout()">Cerrar sesión</button>
-        <ul>
-            <li onclick="mostrarSeccion('alumnos')">Alumnos</li>
-            <li onclick="mostrarSeccion('asistencia')">Asistencia</li>
-            <li onclick="mostrarSeccion('maestros')">Maestros</li>
-            <li onclick="mostrarSeccion('aulas')">Aulas</li>
-            <li onclick="mostrarSeccion('dashboard')">Dashboard</li>
-        </ul>
-    </div>
 
-    <div class="contenido">
-        <!-- Sección Alumnos -->
-        <div id="alumnos" class="seccion">
-            <h3>Alumnos</h3>
-            <select id="editarAlumnoSelect"></select>
-            <input type="text" id="nombreAlumno" placeholder="Nombre">
-            <input type="number" id="edadAlumno" placeholder="Edad">
-            <select id="aulaAlumno"></select>
-            <button onclick="guardarAlumno()">Guardar Alumno</button>
-            <div id="listaAlumnos"></div>
-        </div>
+<div class="sidebar">
+  <h2>Rey de Reyes</h2>
+  <button onclick="verDashboard()">Dashboard</button>
+  <button onclick="verAlumnos()">Alumnos</button>
+  <button onclick="verAsistencias()">Asistencias</button>
+  <button id="btnMaestros" onclick="verMaestros()">Maestros</button>
+  <button onclick="logout()">Salir</button>
+</div>
 
-        <!-- Sección Asistencia -->
-        <div id="asistencia" class="seccion">
-            <h3>Registrar Asistencia</h3>
-            <input type="date" id="fechaAsistencia" value="">
-            <div id="listaAsistencia"></div>
-            <button onclick="guardarAsistencia()">Guardar Asistencia</button>
-        </div>
+<div class="content">
 
-        <!-- Sección Maestros -->
-        <div id="maestros" class="seccion">
-            <h3>Maestros (solo Admin)</h3>
-            <input type="text" id="nombreMaestro" placeholder="Nombre">
-            <input type="email" id="emailMaestro" placeholder="Correo">
-            <input type="password" id="claveMaestro" placeholder="Contraseña">
-            <select id="aulaMaestro"></select>
-            <button onclick="guardarMaestro()">Guardar Maestro</button>
-            <div id="listaMaestros"></div>
-        </div>
+  <h2 id="welcome"></h2>
 
-        <!-- Sección Aulas -->
-        <div id="aulas" class="seccion">
-            <h3>Aulas</h3>
-            <input type="text" id="nombreAula" placeholder="Nombre Aula">
-            <button onclick="guardarAula()">Guardar Aula</button>
-            <div id="listaAulas"></div>
-        </div>
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <div class="card" id="totalAlumnos"></div>
+    <div class="card" id="totalAsistencias"></div>
+  </div>
 
-        <!-- Sección Dashboard -->
-        <div id="dashboard" class="seccion">
-            <h3>Dashboard</h3>
-            <div id="estadisticas"></div>
-        </div>
-    </div>
+  <!-- ALUMNOS -->
+  <div id="alumnos" class="hidden">
+    <h3>Alumnos</h3>
+    <input id="nombreAlumno" placeholder="Nombre">
+    <input id="edadAlumno" type="number" placeholder="Edad">
+    <button onclick="guardarAlumno()">Guardar</button>
+    <div id="listaAlumnos"></div>
+  </div>
 
-    <script src="firebase-config.js"></script>
-    <script src="app.js"></script>
+  <!-- ASISTENCIA -->
+  <div id="asistencias" class="hidden">
+    <h3>Asistencia</h3>
+    <input type="date" id="fecha">
+    <div id="listaAsistencia"></div>
+    <button onclick="guardarAsistencia()">Guardar Asistencia</button>
+  </div>
+
+  <!-- MAESTROS -->
+  <div id="maestros" class="hidden">
+    <h3>Maestros</h3>
+    <input id="nombreMaestro" placeholder="Nombre">
+    <input id="emailMaestro" placeholder="Correo">
+    <input id="claveMaestro" placeholder="Clave">
+    <button onclick="crearMaestro()">Crear Maestro</button>
+    <div id="listaMaestros"></div>
+  </div>
+
+</div>
+
+<script type="module" src="app.js"></script>
 </body>
 </html>
