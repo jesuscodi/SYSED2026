@@ -1,99 +1,32 @@
-import { auth, db } from "./firebase-config.js";
-import {
-  signInWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+// app.js
 
-import {
-  collection, addDoc, getDocs, query, where
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+const db = firebase.firestore();
 
-let usuario = null;
-let alumnos = [];
-
-// LOGIN
-window.login = async function () {
-  try {
+async function login() {
     const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
+    const password = document.getElementById("password").value;
+    const errorMsg = document.getElementById("error");
 
-    await signInWithEmailAndPassword(auth, email, pass);
-    window.location = "index.html";
-  } catch {
-    document.getElementById("loginError").innerText = "Credenciales incorrectas";
-  }
-};
+    try {
+        // Iniciar sesión
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
 
-// LOGOUT
-window.logout = async function () {
-  await signOut(auth);
-  window.location = "login.html";
-};
+        // Obtener rol del usuario
+        const doc = await db.collection("usuarios").doc(user.uid).get();
+        if (!doc.exists) throw new Error("Usuario no encontrado en la base de datos");
 
-// ALUMNOS
-window.guardarAlumno = async function () {
-  const nombre = nombreAlumno.value;
-  const edad = edadAlumno.value;
+        const data = doc.data();
+        if (data.rol === "admin") {
+            window.location.href = "dashboard.html?rol=admin";
+        } else if (data.rol === "maestro") {
+            window.location.href = "dashboard.html?rol=maestro";
+        } else {
+            throw new Error("Rol no definido para este usuario");
+        }
 
-  await addDoc(collection(db, "alumnos"), {
-    nombre,
-    edad
-  });
-  cargarAlumnos();
-};
-
-async function cargarAlumnos() {
-  listaAlumnos.innerHTML = "";
-  const snap = await getDocs(collection(db, "alumnos"));
-  alumnos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  alumnos.forEach(a => {
-    listaAlumnos.innerHTML += `<p>${a.nombre} (${a.edad})</p>`;
-  });
+    } catch (error) {
+        console.error(error);
+        errorMsg.textContent = error.message;
+    }
 }
-
-// ASISTENCIA
-window.guardarAsistencia = async function () {
-  const fecha = document.getElementById("fecha").value;
-  for (let a of alumnos) {
-    const check = document.getElementById("a_" + a.id);
-    await addDoc(collection(db, "asistencias"), {
-      alumno: a.nombre,
-      fecha,
-      asistio: check.checked
-    });
-  }
-  alert("Asistencia guardada");
-};
-
-window.verAsistencias = function () {
-  listaAsistencia.innerHTML = "";
-  alumnos.forEach(a => {
-    listaAsistencia.innerHTML += `
-      <label>
-        <input type="checkbox" id="a_${a.id}">
-        ${a.nombre}
-      </label><br>`;
-  });
-};
-
-// MAESTROS (ADMIN)
-window.crearMaestro = async function () {
-  await addDoc(collection(db, "maestros"), {
-    nombre: nombreMaestro.value,
-    email: emailMaestro.value
-  });
-  alert("Maestro creado");
-};
-
-window.verDashboard = function () {
-  dashboard.classList.remove("hidden");
-  alumnos.classList.add("hidden");
-  asistencias.classList.add("hidden");
-};
-
-window.verAlumnos = function () {
-  dashboard.classList.add("hidden");
-  alumnos.classList.remove("hidden");
-  asistencias.classList.add("hidden");
-  cargarAlumnos();
-};
