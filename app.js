@@ -1,29 +1,21 @@
 // app.js
-async function login() {
+import { auth } from "./firebase.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+const loginBtn = document.getElementById("loginBtn");
+const errorMsg = document.getElementById("errorMsg");
+
+loginBtn.addEventListener("click", async () => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const errorMsg = document.getElementById("error");
 
     try {
-        // Iniciar sesión
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-
-        // Obtener rol del usuario desde Firestore
-        const doc = await db.collection("usuarios").doc(user.uid).get();
-        if (!doc.exists) throw new Error("Usuario no encontrado en la base de datos");
-
-        const data = doc.data();
-        if (data.rol === "admin") {
-            window.location.href = "dashboard.html?rol=admin";
-        } else if (data.rol === "maestro") {
-            window.location.href = "dashboard.html?rol=maestro";
-        } else {
-            throw new Error("Rol no definido para este usuario");
-        }
-
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        // Login exitoso
+        console.log("Usuario conectado:", userCredential.user.email);
+        window.location.href = "dashboard.html"; // Redirige a dashboard
     } catch (error) {
         console.error(error);
-        errorMsg.textContent = error.message;
+        errorMsg.textContent = "Correo o contraseña incorrectos";
     }
-}
+});
