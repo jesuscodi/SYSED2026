@@ -1,60 +1,23 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Gestión de Asistencia</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Login - Sistema de Asistencia</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="firebase-config.js"></script>
 </head>
 <body>
+    <div class="login-container">
+        <h2>Iniciar Sesión</h2>
+        <input type="email" id="email" placeholder="Correo electrónico">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="login()">Entrar</button>
+        <p id="error" class="error-msg"></p>
+    </div>
 
-<div class="sidebar">
-  <h2>Rey de Reyes</h2>
-  <button onclick="verDashboard()">Dashboard</button>
-  <button onclick="verAlumnos()">Alumnos</button>
-  <button onclick="verAsistencias()">Asistencias</button>
-  <button id="btnMaestros" onclick="verMaestros()">Maestros</button>
-  <button onclick="logout()">Salir</button>
-</div>
-
-<div class="content">
-
-  <h2 id="welcome"></h2>
-
-  <!-- DASHBOARD -->
-  <div id="dashboard">
-    <div class="card" id="totalAlumnos"></div>
-    <div class="card" id="totalAsistencias"></div>
-  </div>
-
-  <!-- ALUMNOS -->
-  <div id="alumnos" class="hidden">
-    <h3>Alumnos</h3>
-    <input id="nombreAlumno" placeholder="Nombre">
-    <input id="edadAlumno" type="number" placeholder="Edad">
-    <button onclick="guardarAlumno()">Guardar</button>
-    <div id="listaAlumnos"></div>
-  </div>
-
-  <!-- ASISTENCIA -->
-  <div id="asistencias" class="hidden">
-    <h3>Asistencia</h3>
-    <input type="date" id="fecha">
-    <div id="listaAsistencia"></div>
-    <button onclick="guardarAsistencia()">Guardar Asistencia</button>
-  </div>
-
-  <!-- MAESTROS -->
-  <div id="maestros" class="hidden">
-    <h3>Maestros</h3>
-    <input id="nombreMaestro" placeholder="Nombre">
-    <input id="emailMaestro" placeholder="Correo">
-    <input id="claveMaestro" placeholder="Clave">
-    <button onclick="crearMaestro()">Crear Maestro</button>
-    <div id="listaMaestros"></div>
-  </div>
-
-</div>
-
-<script type="module" src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
