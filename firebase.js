@@ -1,3 +1,7 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+
 const firebaseConfig = {
  apiKey: "AIzaSyDNd6f8zriP3U-1-zLTD0e_c45H73lEg1o",
   authDomain: "escueladominicalreydereyes.firebaseapp.com",
@@ -7,6 +11,5 @@ const firebaseConfig = {
   appId: "1:891424130656:web:8b0e92dd4cf00ab40ce505",
 
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
